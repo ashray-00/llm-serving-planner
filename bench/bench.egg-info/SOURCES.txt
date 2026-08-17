@@ -1,0 +1,10 @@
+README.md
+normalize.py
+pyproject.toml
+schema.py
+bench.egg-info/PKG-INFO
+bench.egg-info/SOURCES.txt
+bench.egg-info/dependency_links.txt
+bench.egg-info/requires.txt
+bench.egg-info/top_level.txt
+tests/test_normalize.py
