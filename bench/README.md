@@ -72,8 +72,15 @@ python normalize.py raw/max_concurrency_16_run1.json raw/max_concurrency_16_run1
    ```bash
    cd bench
    export GPU_NAME="NVIDIA RTX 4090"
+   # If the vLLM server requires auth (common on RunPod):
+   # export VLLM_API_KEY="your-server-key"
    ./run_baseline.sh
    ```
+
+   On RunPod, `VLLM_API_KEY` is usually already set for the vLLM server. Export it
+   (or rely on the pod env) before running the baseline; `bench.sh` injects
+   `--header Authorization=Bearer <key>` automatically. Do **not** pass the header
+   via `VLLM_FLAGS` — spaces in `Bearer <key>` get split incorrectly.
 
    Output: `results/baseline.json` — a JSON array of averaged `BenchResult` objects, one entry per concurrency level.
 

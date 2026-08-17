@@ -23,6 +23,7 @@ PORT="${PORT:-8000}"
 BACKEND="${BACKEND:-vllm}"
 DATASET_NAME="${DATASET_NAME:-random}"
 SLO_TTFT_MS="${SLO_TTFT_MS:-}"
+VLLM_API_KEY="${VLLM_API_KEY:-}"
 VLLM_FLAGS="${VLLM_FLAGS:-}"
 DRY_RUN=0
 
@@ -33,7 +34,7 @@ Usage: bench.sh [options]
 Environment variables (also accepted as --key value CLI overrides):
   MODEL, GPU_NAME, DTYPE, VLLM_VERSION, INPUT_LEN, OUTPUT_LEN, REPEATS,
   CONCURRENCIES, REQUEST_RATES, OUTPUT_DIR, NUM_PROMPTS, WARMUP_PROMPTS,
-  HOST, PORT, BACKEND, DATASET_NAME, SLO_TTFT_MS, VLLM_FLAGS
+  HOST, PORT, BACKEND, DATASET_NAME, SLO_TTFT_MS, VLLM_API_KEY, VLLM_FLAGS
 
 Options:
   --dry-run          Print commands without executing vllm bench serve.
@@ -131,6 +132,9 @@ build_common_args() {
   )
   if [[ -n "$SLO_TTFT_MS" ]]; then
     COMMON_ARGS+=(--goodput "ttft:${SLO_TTFT_MS}")
+  fi
+  if [[ -n "$VLLM_API_KEY" ]]; then
+    COMMON_ARGS+=(--header "Authorization=Bearer ${VLLM_API_KEY}")
   fi
   local flag
   while IFS= read -r flag; do
