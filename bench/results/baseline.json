@@ -1,0 +1,150 @@
+[
+  {
+    "model": "Qwen/Qwen3-8B",
+    "dtype": "bf16",
+    "gpu": "NVIDIA RTX 4090",
+    "vllm_version": "0.27.1",
+    "flags": [],
+    "input_len": 1024,
+    "output_len": 256,
+    "mode": "max_concurrency",
+    "load_value": 1.0,
+    "num_prompts": 100,
+    "ttft_ms": {
+      "mean": 102.80737497533362,
+      "p50": 103.783016713957,
+      "p95": 105.27849271893501
+    },
+    "itl_ms": {
+      "mean": 17.606531831612383,
+      "p50": 17.60664116591215,
+      "p95": 17.855623954286177
+    },
+    "e2e_latency_ms": {
+      "mean": 4592.472819077472,
+      "p95": 4596.404082607478
+    },
+    "output_tok_per_s_per_request": 55.743397439769744,
+    "total_output_tok_per_s": 55.74263503293031,
+    "gpu_dollars_per_hr": 0.34,
+    "cost_per_1m_output_tokens_raw": 1.6942945805961775,
+    "cost_per_1m_output_tokens_goodput": null,
+    "goodput_req_per_s": null,
+    "slo_ttft_ms": null,
+    "queue_depth_mean": null,
+    "gpu_cache_usage_perc": null,
+    "num_preemptions_total": null,
+    "timestamp": "2026-08-17T10:50:03Z"
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "dtype": "bf16",
+    "gpu": "NVIDIA RTX 4090",
+    "vllm_version": "0.27.1",
+    "flags": [],
+    "input_len": 1024,
+    "output_len": 256,
+    "mode": "max_concurrency",
+    "load_value": 4.0,
+    "num_prompts": 100,
+    "ttft_ms": {
+      "mean": 257.0048642034332,
+      "p50": 286.40714660286903,
+      "p95": 324.10930544137955
+    },
+    "itl_ms": {
+      "mean": 19.751200411541788,
+      "p50": 19.170981521407764,
+      "p95": 19.464476065089304
+    },
+    "e2e_latency_ms": {
+      "mean": 5293.560834793995,
+      "p95": 5302.7204617547495
+    },
+    "output_tok_per_s_per_request": 48.36073531225558,
+    "total_output_tok_per_s": 193.40008719306277,
+    "gpu_dollars_per_hr": 0.34,
+    "cost_per_1m_output_tokens_raw": 0.488337134771634,
+    "cost_per_1m_output_tokens_goodput": null,
+    "goodput_req_per_s": null,
+    "slo_ttft_ms": null,
+    "queue_depth_mean": null,
+    "gpu_cache_usage_perc": null,
+    "num_preemptions_total": null,
+    "timestamp": "2026-08-17T10:57:29Z"
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "dtype": "bf16",
+    "gpu": "NVIDIA RTX 4090",
+    "vllm_version": "0.27.1",
+    "flags": [],
+    "input_len": 1024,
+    "output_len": 256,
+    "mode": "max_concurrency",
+    "load_value": 16.0,
+    "num_prompts": 100,
+    "ttft_ms": {
+      "mean": 589.3758576797942,
+      "p50": 592.9379425942898,
+      "p95": 1175.5582586551707
+    },
+    "itl_ms": {
+      "mean": 24.982900257739754,
+      "p50": 21.623834346731503,
+      "p95": 22.23278892536958
+    },
+    "e2e_latency_ms": {
+      "mean": 6960.015308316797,
+      "p95": 7478.1324664441245
+    },
+    "output_tok_per_s_per_request": 36.78224456445692,
+    "total_output_tok_per_s": 542.7400723316441,
+    "gpu_dollars_per_hr": 0.34,
+    "cost_per_1m_output_tokens_raw": 0.17401413541975153,
+    "cost_per_1m_output_tokens_goodput": null,
+    "goodput_req_per_s": null,
+    "slo_ttft_ms": null,
+    "queue_depth_mean": null,
+    "gpu_cache_usage_perc": null,
+    "num_preemptions_total": null,
+    "timestamp": "2026-08-17T11:00:39Z"
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "dtype": "bf16",
+    "gpu": "NVIDIA RTX 4090",
+    "vllm_version": "0.27.1",
+    "flags": [],
+    "input_len": 1024,
+    "output_len": 256,
+    "mode": "max_concurrency",
+    "load_value": 64.0,
+    "num_prompts": 100,
+    "ttft_ms": {
+      "mean": 5913.39807820196,
+      "p50": 3548.5575438166657,
+      "p95": 13616.004375120005
+    },
+    "itl_ms": {
+      "mean": 40.3721443932333,
+      "p50": 28.021129469076794,
+      "p95": 201.61737014229098
+    },
+    "e2e_latency_ms": {
+      "mean": 16208.294796800863,
+      "p95": 24257.18918070197
+    },
+    "output_tok_per_s_per_request": 15.795053825808484,
+    "total_output_tok_per_s": 835.539870730185,
+    "gpu_dollars_per_hr": 0.34,
+    "cost_per_1m_output_tokens_raw": 0.11303403673831709,
+    "cost_per_1m_output_tokens_goodput": null,
+    "goodput_req_per_s": null,
+    "slo_ttft_ms": null,
+    "queue_depth_mean": null,
+    "gpu_cache_usage_perc": null,
+    "num_preemptions_total": null,
+    "timestamp": "2026-08-17T11:02:59Z"
+  }
+]
