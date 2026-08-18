@@ -15,7 +15,7 @@ dependencies = [
 dev = ["pytest>=7.0"]
 
 [tool.setuptools]
-py-modules = ["schema", "normalize"]
+py-modules = ["schema", "normalize", "metrics_sampler"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

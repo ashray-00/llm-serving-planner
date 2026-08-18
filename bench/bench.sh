@@ -25,6 +25,10 @@ DATASET_NAME="${DATASET_NAME:-random}"
 SLO_TTFT_MS="${SLO_TTFT_MS:-}"
 VLLM_API_KEY="${VLLM_API_KEY:-}"
 VLLM_FLAGS="${VLLM_FLAGS:-}"
+METRICS_ENABLED="${METRICS_ENABLED:-1}"
+METRICS_INTERVAL="${METRICS_INTERVAL:-0.5}"
+METRICS_MAX_DURATION="${METRICS_MAX_DURATION:-3600}"
+METRICS_FLUSH_SEC="${METRICS_FLUSH_SEC:-2}"
 DRY_RUN=0
 
 usage() {
@@ -34,7 +38,8 @@ Usage: bench.sh [options]
 Environment variables (also accepted as --key value CLI overrides):
   MODEL, GPU_NAME, DTYPE, VLLM_VERSION, INPUT_LEN, OUTPUT_LEN, REPEATS,
   CONCURRENCIES, REQUEST_RATES, OUTPUT_DIR, NUM_PROMPTS, WARMUP_PROMPTS,
-  HOST, PORT, BACKEND, DATASET_NAME, SLO_TTFT_MS, VLLM_API_KEY, VLLM_FLAGS
+  HOST, PORT, BACKEND, DATASET_NAME, SLO_TTFT_MS, VLLM_API_KEY, VLLM_FLAGS,
+  METRICS_ENABLED, METRICS_INTERVAL, METRICS_MAX_DURATION, METRICS_FLUSH_SEC
 
 Options:
   --dry-run          Print commands without executing vllm bench serve.
@@ -143,6 +148,51 @@ build_common_args() {
   done < <(parse_flags_array)
 }
 
+metrics_url() {
+  printf 'http://%s:%s/metrics' "$HOST" "$PORT"
+}
+
+start_metrics_sampler() {
+  local metrics_file="$1"
+  if [[ "$METRICS_ENABLED" != "1" ]]; then
+    return 0
+  fi
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    log "would start metrics sampler -> raw/$(basename "$metrics_file") duration=${METRICS_MAX_DURATION}s"
+    return 0
+  fi
+
+  local -a sampler_cmd=(
+    python3 "$SCRIPT_DIR/metrics_sampler.py"
+    --duration "$METRICS_MAX_DURATION"
+    --interval "$METRICS_INTERVAL"
+    --url "$(metrics_url)"
+    --out "$metrics_file"
+  )
+  if [[ -n "$VLLM_API_KEY" ]]; then
+    sampler_cmd+=(--api-key "$VLLM_API_KEY")
+  fi
+
+  if ! "${sampler_cmd[@]}" >/dev/null & then
+    log "WARNING: failed to start metrics sampler for $(basename "$metrics_file")"
+    return 0
+  fi
+  echo $!
+}
+
+stop_metrics_sampler() {
+  local sampler_pid="${1:-}"
+  if [[ -z "$sampler_pid" || "$DRY_RUN" -eq 1 ]]; then
+    return 0
+  fi
+
+  if kill -0 "$sampler_pid" 2>/dev/null; then
+    kill -TERM "$sampler_pid" 2>/dev/null || true
+    wait "$sampler_pid" 2>/dev/null || true
+  fi
+  sleep "$METRICS_FLUSH_SEC"
+}
+
 run_vllm() {
   local description="$1"
   shift
@@ -182,6 +232,10 @@ run_measured() {
   local repeat="$3"
   local raw_file="${mode}_${load_value}_run${repeat}.json"
   local meta_file="${mode}_${load_value}_run${repeat}.meta.json"
+  local metrics_file="$RAW_DIR/metrics_${mode}_${load_value}_run${repeat}.json"
+  local sampler_pid=""
+
+  sampler_pid="$(start_metrics_sampler "$metrics_file")"
   build_common_args
   local -a cmd=(
     vllm "${COMMON_ARGS[@]}"
@@ -195,7 +249,11 @@ run_measured() {
   else
     cmd+=(--request-rate "$load_value")
   fi
-  run_vllm "measured mode=$mode load=$load_value repeat=$repeat/$REPEATS -> raw/$raw_file" "${cmd[@]:1}"
+  if ! run_vllm "measured mode=$mode load=$load_value repeat=$repeat/$REPEATS -> raw/$raw_file" "${cmd[@]:1}"; then
+    stop_metrics_sampler "$sampler_pid"
+    return 1
+  fi
+  stop_metrics_sampler "$sampler_pid"
   if [[ "$DRY_RUN" -eq 0 ]]; then
     write_meta "$RAW_DIR/$meta_file" "$mode" "$load_value" "$repeat"
   fi

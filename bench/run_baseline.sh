@@ -73,7 +73,16 @@ for raw_path in sorted(raw_dir.glob("*.json")):
     if not meta_path.exists():
         raise SystemExit(f"Missing metadata for {raw_path.name}")
 
-    result = normalize(json.loads(raw_path.read_text()), json.loads(meta_path.read_text()))
+    metrics_path = raw_path.parent / f"metrics_{raw_path.stem}.json"
+    metrics = None
+    if metrics_path.exists():
+        metrics = json.loads(metrics_path.read_text())
+
+    result = normalize(
+        json.loads(raw_path.read_text()),
+        json.loads(meta_path.read_text()),
+        metrics,
+    )
     key = (result.mode, str(result.load_value))
     groups[key].append(result)
 

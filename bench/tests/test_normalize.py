@@ -13,6 +13,7 @@ from schema import BenchResult
 
 FIXTURES = Path(__file__).parent / "fixtures"
 MOCK_RAW = FIXTURES / "mock_vllm_bench_output.json"
+MOCK_METRICS = FIXTURES / "mock_metrics_output.json"
 
 BASE_META = {
     "model": "Qwen/Qwen3-8B",
@@ -131,3 +132,20 @@ def test_cost_per_million_output_tokens_raises_on_non_positive_rate(
 ) -> None:
     with pytest.raises(ValueError, match="output_tok_per_s must be > 0"):
         cost_per_million_output_tokens(0.34, output_tok_per_s)
+
+
+def test_normalize_uses_metrics_file_for_cache_and_preemption(raw: dict) -> None:
+    with MOCK_METRICS.open(encoding="utf-8") as handle:
+        metrics = json.load(handle)
+
+    result = normalize(raw, BASE_META, metrics)
+
+    assert result.gpu_cache_usage_perc == pytest.approx(0.87)
+    assert result.num_preemptions_total == 2
+
+
+def test_normalize_metrics_file_optional_leaves_fields_none(raw: dict) -> None:
+    result = normalize(raw, BASE_META, None)
+
+    assert result.gpu_cache_usage_perc is None
+    assert result.num_preemptions_total is None

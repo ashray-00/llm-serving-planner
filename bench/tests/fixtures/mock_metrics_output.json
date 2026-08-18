@@ -1,0 +1,23 @@
+{
+  "url": "http://127.0.0.1:8000/metrics",
+  "interval_s": 0.5,
+  "duration_s": 60.0,
+  "started_at": "2025-08-13T10:30:45+00:00",
+  "samples": [
+    {
+      "timestamp": "2025-08-13T10:30:46+00:00",
+      "gpu_cache_usage_perc": 0.42,
+      "num_preemptions_total": 10
+    },
+    {
+      "timestamp": "2025-08-13T10:30:47+00:00",
+      "gpu_cache_usage_perc": 0.87,
+      "num_preemptions_total": 12
+    }
+  ],
+  "summary": {
+    "sample_count": 2,
+    "max_gpu_cache_usage_perc": 0.87,
+    "num_preemptions_total": 2
+  }
+}

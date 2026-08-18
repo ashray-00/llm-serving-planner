@@ -77,8 +77,30 @@ def _e2e_stats(raw: dict[str, Any]) -> E2ELatencyStatsMs:
     return E2ELatencyStatsMs(mean=mean, p95=p95)
 
 
+def _metrics_summary_fields(
+    metrics: dict[str, Any] | None,
+) -> tuple[float | None, int | None]:
+    """Pull cache/preemption summary stats from a metrics sampler JSON file."""
+
+    if not metrics:
+        return None, None
+
+    summary = metrics.get("summary")
+    if not isinstance(summary, dict):
+        return None, None
+
+    cache = summary.get("max_gpu_cache_usage_perc")
+    preempt = summary.get("num_preemptions_total")
+
+    gpu_cache_usage_perc = float(cache) if cache is not None else None
+    num_preemptions_total = int(preempt) if preempt is not None else None
+    return gpu_cache_usage_perc, num_preemptions_total
+
+
 def _optional_gpu_cache_usage_perc(
-    raw: dict[str, Any], meta: dict[str, Any]
+    raw: dict[str, Any],
+    meta: dict[str, Any],
+    metrics: dict[str, Any] | None = None,
 ) -> float | None:
     """Map KV cache occupancy (0–1) if present in raw or sidecar metadata.
 
@@ -86,6 +108,10 @@ def _optional_gpu_cache_usage_perc(
     on the running server's Prometheus ``/metrics`` endpoint as
     ``vllm:gpu_cache_usage_perc`` (v0) or ``vllm:kv_cache_usage_perc`` (v1).
     """
+    metrics_cache, _ = _metrics_summary_fields(metrics)
+    if metrics_cache is not None:
+        return metrics_cache
+
     for source in (raw, meta):
         for key in (
             "gpu_cache_usage_perc",
@@ -98,7 +124,9 @@ def _optional_gpu_cache_usage_perc(
 
 
 def _optional_num_preemptions_total(
-    raw: dict[str, Any], meta: dict[str, Any]
+    raw: dict[str, Any],
+    meta: dict[str, Any],
+    metrics: dict[str, Any] | None = None,
 ) -> int | None:
     """Map cumulative preemption count if present in raw or sidecar metadata.
 
@@ -106,6 +134,10 @@ def _optional_num_preemptions_total(
     on the running server's Prometheus ``/metrics`` endpoint as
     ``vllm:num_preemptions_total``.
     """
+    _, metrics_preempt = _metrics_summary_fields(metrics)
+    if metrics_preempt is not None:
+        return metrics_preempt
+
     for source in (raw, meta):
         for key in ("num_preemptions_total", "num_preemptions"):
             if key in source and source[key] is not None:
@@ -161,7 +193,11 @@ def compute_cost_fields(
     }
 
 
-def normalize(raw_json: dict[str, Any], meta: dict[str, Any]) -> BenchResult:
+def normalize(
+    raw_json: dict[str, Any],
+    meta: dict[str, Any],
+    metrics: dict[str, Any] | None = None,
+) -> BenchResult:
     """Map vLLM bench serve output + sidecar metadata to BenchResult."""
     for key in _REQUIRED_RAW_FIELDS:
         _require(raw_json, key)
@@ -237,8 +273,8 @@ def normalize(raw_json: dict[str, Any], meta: dict[str, Any]) -> BenchResult:
             if meta.get("queue_depth_mean") is not None
             else None
         ),
-        gpu_cache_usage_perc=_optional_gpu_cache_usage_perc(raw_json, meta),
-        num_preemptions_total=_optional_num_preemptions_total(raw_json, meta),
+        gpu_cache_usage_perc=_optional_gpu_cache_usage_perc(raw_json, meta, metrics),
+        num_preemptions_total=_optional_num_preemptions_total(raw_json, meta, metrics),
         timestamp=str(timestamp),
     )
 
@@ -333,6 +369,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("raw_path", type=Path, help="Path to raw vLLM JSON output.")
     parser.add_argument("meta_path", type=Path, help="Path to sidecar metadata JSON.")
     parser.add_argument(
+        "--metrics",
+        type=Path,
+        default=None,
+        help="Optional metrics sampler JSON with cache/preemption summary stats.",
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         required=True,
@@ -342,7 +384,8 @@ def main(argv: list[str] | None = None) -> int:
 
     raw = _load_json(args.raw_path)
     meta = _load_json(args.meta_path)
-    result = normalize(raw, meta)
+    metrics = _load_json(args.metrics) if args.metrics is not None else None
+    result = normalize(raw, meta, metrics)
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(result.to_json() + "\n", encoding="utf-8")
